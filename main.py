@@ -1,11 +1,12 @@
 import random
 import numpy as np
+import pandas as pd
 
 import matplotlib.pyplot as plt
 import sys
 from matplotlib.patches import Rectangle
 
-timesteps = 70
+timesteps = 50
 fig, ax = plt.subplots()
 plt.title("SRRS")
 plt.xlabel("time")
@@ -13,6 +14,7 @@ plt.ylabel("Number of robots")
 plt.grid(axis='y')
 
 random.seed()
+
 
 # global variables
 rid = 1
@@ -104,20 +106,22 @@ class Robot:
             self.tasks = ["Collect","Print"]
         self.num_tasks = len(self.tasks)
 
-        if(self.current_task == "idle"):
-            self.tasks_dur = 0
-        # if(self.current_task == "collecting"):
-        #   self.tasks_dur = 1
-        # if(self.current_task == "assembling"):
-        #   self.tasks_dur = 2
-        # if(self.current_task == "printing"):
-        #   self.tasks_dur = 2
+        
 
     def __str__(self):
-        return str(self.id)+" "+str(self.build_qual)
+        return str(self.id)+" "+str(self.current_task)
 
     def set_curr_task(self,tasktype):
         self.current_task = tasktype
+        if(self.current_task == "idle"):
+            self.tasks_dur = 0
+        if(self.current_task == "collecting"):
+            self.tasks_dur = 1
+        if(self.current_task == "assembling"):
+            self.tasks_dur = 2
+        if(self.current_task == "printing"):
+            self.tasks_dur = 2
+
     def set_prev_task(self,tasktype):
         self.prev_task = tasktype
     def set_task_dur(self,task_dur):
@@ -149,7 +153,7 @@ def collecting(robot):
 # collecting
 def collect(robot):
     global Materials, Env_Materials, Collect_Amount
-    if (Env_Materials - Collect_Amount > 0):
+    if (Env_Materials - Collect_Amount >= 0):
         # if robot.current_task == "idle":
         
         Materials = Materials + Collect_Amount
@@ -249,6 +253,7 @@ def main():
     numbeingbuilt = 0
     init_build_qual = random.uniform(0.85, 0.95)
     robot = Robot("Replicator",init_build_qual,rid)
+    df = pd.DataFrame(columns = ["Time","NonPr","Printable","Materials","Env_Materials","Replicator","Normal","Assembler","Printer","Assemble","Print","Collect","Idle","Average Build Quality"])
 
     # commence tasks
     # collecting(robot)
@@ -270,34 +275,8 @@ def main():
     listnumNormal = []
     listnumAssembler = []
     listnumPrinter = []
-    for i in range(len(robotlist)):
-        n_idle = 0
-        n_replicator = 0
-        n_normal = 0
-        n_assembler = 0
-        n_printer = 0
-        
-        if robotlist[i].current_task=="idle":
-            n_idle = n_idle+1
-        listnumIdle.append(n_idle)
-        
-        if(robotlist[i].type== "Replicator"):
-            n_replicator += 1;
-        listnumReplicator.append(n_replicator)
 
-        if(robotlist[i].type== "Normal"):
-            n_normal += 1;
-        listnumNormal.append(n_normal)
-        
-        if(robotlist[i].type== "Assembler"):
-            n_assembler += 1;
-        listnumAssembler.append(n_assembler)
-        
-        if(robotlist[i].type== "Printer"):
-            n_printer += 1;
-        listnumPrinter.append(n_printer)
-        
-
+    
     # number of bots working
     listnumCollecting = []
     listnumPrinting = []
@@ -318,9 +297,11 @@ def main():
                     canAssemble = assembling(robotlist[i],"Normal")
                 elif(robotlist[i].type == "Normal"):
                     canCollect = collect(robotlist[i])
+                    # print(t,robotlist[i].id,canCollect)
                     if canCollect:
                         collecting(robotlist[i])
 
+            
             else:
                 if(robotlist[i].tasks_dur - 1 != 0):
                 # if(robotlist[i].current_task != "idle"):
@@ -335,29 +316,27 @@ def main():
                                 canCollect = collect(newbot)
                                 if canCollect:
                                     collecting(newbot)
+                            # print(newbot)
                             robotlist.append(newbot)
                         robotlist[i].set_prev_task(robotlist[i].current_task)
 
-                elif(robotlist[i].tasks_dur == 0 and robotlist[i].type == "Normal"):
+                elif(robotlist[i].type == "Normal"):
                     canCollect = collect(robotlist[i])
                     if(canCollect):
                         collecting(robotlist[i])
                     else:
-                        robotlist[i].set_curr_task=="idle"
+                        robotlist[i].set_curr_task("idle")
 
                     # else make print tasks? canPrint()?
 
                 else:
-                    # print("HAHAHAH")
                     robotlist[i].set_task_dur(0)
                     if(robotlist[i].get_curr_task()=="assembling"):
                         newbot = assemble(robotlist[i],"Normal")
                         if newbot:
                             robotlist.append(newbot)
-
                     robotlist[i].set_prev_task(robotlist[i].current_task)
-
-                    # robotlist[i].set_tasks_dur(0)
+                    robotlist[i].set_task_dur(0)
                     robotlist[i].set_curr_task("idle")
 
             # if(robotlist[i].current_task == "assembling"):
@@ -368,34 +347,73 @@ def main():
         #ax.add_patch(Rectangle((t-0.4, 0), 0.8, numbeingbuilt)) # replace 1 with numbeingbuilt
         
 
-        print("="*20)
+        print("="*50)
+
+        n_replicator = 0
+        n_normal = 0
+        n_assembler = 0
+        n_printer = 0
 
 
         c_flag = 0
         p_flag = 0
         a_flag = 0
         i_flag = 0
+
+        tot_build_qual = 0
+        # print(t)
         for i in robotlist:
             if i.current_task=="collecting":
+                # print(i)
                 c_flag+=1
             if i.current_task=="printing":
                 p_flag+=1
             if i.current_task=="assembling":
                 a_flag+=1
             if i.current_task=="idle":
+                # print(i)
                 i_flag+=1
+
+            if(i.type== "Replicator"):
+                n_replicator += 1;
+            
+            if(i.type== "Normal"):
+                n_normal += 1;
+            
+            if(i.type== "Assembler"):
+                n_assembler += 1;
+            
+            if(i.type== "Printer"):
+                n_printer += 1;
+
+            tot_build_qual = tot_build_qual + i.get_buid_qual()
+
+        avg_build_qual = tot_build_qual/len(robotlist)
 
         listnumCollecting.append(c_flag)
         listnumPrinting.append(p_flag)
         listnumAssembling.append(a_flag)
     
-        # print(t,":",len(robotlist),"\t",[NonPr,Printable,Materials,Env_Materials])
+        # print(t,":",len(robotlist),[NonPr,Printable,Materials,Env_Materials])
+        # ["Time","NonPr","Printable","Materials","Env_Materials","Replicator","Normal","Assembler","Printer","Assemble","Print","Collect","Idle"]
+
+        df.loc[len(df)] = [t,NonPr,Printable,Materials,Env_Materials,n_replicator,n_normal,n_assembler,n_printer,a_flag,p_flag,c_flag,i_flag,avg_build_qual]
         
-        print("Time\t\t",t)
-        print("#Robots\t\t",len(robotlist))
-        print("Materials\t",[NonPr,Printable,Materials,Env_Materials])
-        print("#Collect:\t",c_flag)
-        print("#Idle:\t\t",i_flag)
+        # print("Time\t\t",t)
+        # print("#Replicator:\t",n_replicator)
+        # print("#Normal:\t",n_normal)
+        # print("#Assembler:\t",n_assembler)
+        # print("#Printer:\t",n_printer)
+        # print("#Robots\t\t",len(robotlist))
+        # print("Materials\t",[NonPr,Printable,Materials,Env_Materials])
+        # print("#Assemble:\t",a_flag)
+        # print("#Print:\t\t",p_flag)
+        # print("#Collect:\t",c_flag)
+        # print("#Idle:\t\t",i_flag)
+
+        
+
+
 
         ids=[]
         for j in robotlist:
@@ -416,6 +434,7 @@ def main():
     plt.legend()
     #plt.show()
 
+    print(df)
         
 
 if __name__ == "__main__":
