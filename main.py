@@ -142,18 +142,21 @@ def printResources():
 
 # task functions
 
-# collecting
 def collecting(robot):
+    robot.set_curr_task("collecting")
+    robot.set_task_dur(1)
+
+# collecting
+def collect(robot):
     global Materials, Env_Materials, Collect_Amount
     if (Env_Materials - Collect_Amount > 0):
         # if robot.current_task == "idle":
-        robot.set_curr_task("collecting")
-        # robot.tasks_dur = 1
-        robot.set_task_dur(1)
+        
         Materials = Materials + Collect_Amount
         Env_Materials = Env_Materials - Collect_Amount
+        return True
     else:
-        pass
+        return False
 
 # build robot task - assembler and replicator
 # assemble task
@@ -314,7 +317,9 @@ def main():
                 if(robotlist[i].type == "Replicator"):
                     canAssemble = assembling(robotlist[i],"Normal")
                 elif(robotlist[i].type == "Normal"):
-                    collecting(robotlist[i])
+                    canCollect = collect(robotlist[i])
+                    if canCollect:
+                        collecting(robotlist[i])
 
             else:
                 if(robotlist[i].tasks_dur - 1 != 0):
@@ -326,12 +331,24 @@ def main():
                     if(robotlist[i].get_curr_task()=="assembling" and canAssemble):
                         newbot = assemble(robotlist[i],"Normal")
                         if newbot:
+                            if(newbot.type == "Normal"):
+                                canCollect = collect(newbot)
+                                if canCollect:
+                                    collecting(newbot)
                             robotlist.append(newbot)
                         robotlist[i].set_prev_task(robotlist[i].current_task)
+
+                elif(robotlist[i].tasks_dur == 0 and robotlist[i].type == "Normal"):
+                    canCollect = collect(robotlist[i])
+                    if(canCollect):
+                        collecting(robotlist[i])
+                    else:
+                        robotlist[i].set_curr_task=="idle"
 
                     # else make print tasks? canPrint()?
 
                 else:
+                    # print("HAHAHAH")
                     robotlist[i].set_task_dur(0)
                     if(robotlist[i].get_curr_task()=="assembling"):
                         newbot = assemble(robotlist[i],"Normal")
@@ -357,6 +374,7 @@ def main():
         c_flag = 0
         p_flag = 0
         a_flag = 0
+        i_flag = 0
         for i in robotlist:
             if i.current_task=="collecting":
                 c_flag+=1
@@ -364,16 +382,20 @@ def main():
                 p_flag+=1
             if i.current_task=="assembling":
                 a_flag+=1
+            if i.current_task=="idle":
+                i_flag+=1
 
         listnumCollecting.append(c_flag)
         listnumPrinting.append(p_flag)
         listnumAssembling.append(a_flag)
     
-        #print(t,":",len(robotlist),"\t",[NonPr,Printable,Materials,Env_Materials])
+        # print(t,":",len(robotlist),"\t",[NonPr,Printable,Materials,Env_Materials])
         
         print("Time\t\t",t)
         print("#Robots\t\t",len(robotlist))
         print("Materials\t",[NonPr,Printable,Materials,Env_Materials])
+        print("#Collect:\t",c_flag)
+        print("#Idle:\t\t",i_flag)
 
         ids=[]
         for j in robotlist:
@@ -392,7 +414,7 @@ def main():
     curr_built = [x + y for (x, y) in zip(rcoordslist, listnumAssembling)] 
     plt.scatter(tcoordslist,curr_built,marker=".",color="black",label = "numcurrent+numbeingbuilt")
     plt.legend()
-    plt.show()
+    #plt.show()
 
         
 
