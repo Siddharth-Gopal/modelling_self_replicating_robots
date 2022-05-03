@@ -1,20 +1,32 @@
+### Libraries 
+# pandas             1.4.2
+# matplotlib         3.5.1
+# numpy              1.22.3
+
+### Installation
+# pip install <library name>==<version>
+# 	or
+# pip3 install <library name>==<version>
+
+### To run:
+# $ python3 <filename>.py
+
 import random
 import numpy as np
 import pandas as pd
-
 import matplotlib.pyplot as plt
 import sys
 from matplotlib.patches import Rectangle
 
 timesteps = 120
 fig, ax = plt.subplots()
-plt.title("SRRS")
-plt.xlabel("time")
+plt.title("SRRS - CHO Config.")
+plt.xlabel("Time")
 plt.ylabel("Number of robots")
 plt.grid(axis='y')
 
+# set random number generator
 random.seed()
-
 
 # global variables
 rid = 1
@@ -22,7 +34,7 @@ nid = 0
 aid = 0
 pid = 0
 
-# sim param
+# simulation parameters
 Num_Steps = 100				#; % Number of iterations/time-steps that the simulation goes through.
 NonPr = 300.0 				#; % The robot system=s starting quantity of nonprintable components.
 Printable = 100.0 			#; % The robot system’s starting quantity of printable components.
@@ -56,35 +68,6 @@ RiskFactory_Modifier = 0.1 	#; % Multiplier for impact of factory-made robots on
 # [replicator,normal,assembler,printer]
 cost_Pr = [6,2,4,4]			#; % Total cost printable
 cost_NonPr = [3,1,2,2]		#; % Total cost nonprintable
-
-class Sim:
-	def __init__(self,t):
-		self.t = 0
-		# materials in a time step
-		self.Printable = 0
-		self.NonPr = 0
-		self.Materials = 0
-		self.Env_Materials = 0
-		self.numIdle = 0
-
-		# total number of bots
-		self.numReplicator = 0
-		self.numNormal = 0
-		self.numAssembler = 0
-		self.numPrinter = 0
-
-		# number of bots working
-		self.numCollecting = 0
-		self.numPrinting = 0
-		self.numAssembling = 0
-
-
-# basically a list of robots in a config (currently named SRRS)
-# class SRRS:
-# 	def __init__(self):
-# 		self.robots = dict()
-# 	def insert(self,robot):
-# 		self.robots[robot.get_robot_id()] = robot
 
 # robot object
 class Robot:
@@ -124,11 +107,11 @@ class Robot:
 		if(self.current_task == "printing"):
 			self.tasks_dur = 2
 
+	# methods of robot object
 	def set_prev_task(self,tasktype):
 		self.prev_task = tasktype
 	def set_task_dur(self,task_dur):
 		self.tasks_dur = task_dur
-
 	def get_robot_id(self):
 		return self.id
 	def get_buid_qual(self):
@@ -140,26 +123,24 @@ class Robot:
 	def get_task_dur(self):
 		return self.tasks_dur
 
-
-
 # print current resources
 def printResources():
 	print(NonPr,Printable,Materials,Env_Materials)
 
 # task functions
-
 def collecting(robot):
+	global Materials, Env_Materials, Collect_Amount
 	robot.set_curr_task("collecting")
 	robot.set_task_dur(1)
+	Materials = Materials + Collect_Amount
+	Env_Materials = Env_Materials - Collect_Amount
 
 # collecting
-def collect(robot):
+def collectCheck(robot):
 	global Materials, Env_Materials, Collect_Amount
 	if (Env_Materials - Collect_Amount >= 0):
-		# if robot.current_task == "idle":
-		
-		Materials = Materials + Collect_Amount
-		Env_Materials = Env_Materials - Collect_Amount
+		# Materials = Materials + Collect_Amount
+		# Env_Materials = Env_Materials - Collect_Amount
 		return True
 	else:
 		return False
@@ -167,7 +148,7 @@ def collect(robot):
 # build robot task - assembler and replicator
 # assemble task
 
-def assemblecheck(robot,tobuild):
+def assembleCheck(robot,tobuild):
 	global rid,nid,aid,pid,Printable,NonPr,Quality_incr_Chance,Quality_incr_Lower, Quality_incr_Upper
 	
 	if(tobuild == "Replicator"):
@@ -214,7 +195,6 @@ def assembling(robot,tobuild):
 		# pid = pid+1
 		# robotid = pid
 
-
 	if Printable - cost_Pr[i] >= 0 and NonPr - cost_NonPr[i] >= 0:
 		robot.set_curr_task("assembling")
 		robot.set_task_dur(AssembleCost_Time)
@@ -239,7 +219,7 @@ def assembling(robot,tobuild):
 		Printable = Printable - cost_Pr[i]
 		NonPr = NonPr - cost_NonPr[i]
 		#numbeingbuilt += 1
-		robot.beingbuiltlist.append(str(robotid))
+		robot.beingbuiltlist.append(tobuild[0]+str(robotid))
 		return True
 	else:
 		robot.set_curr_task("idle")
@@ -250,7 +230,7 @@ def assembling(robot,tobuild):
 
 def assemble(builder,tobuild):
 	global rid,nid,aid,pid,Printable,NonPr,Quality_incr_Chance,Quality_incr_Lower, Quality_incr_Upper
-	print("HUEHUEHUE ",Printable)
+	# print("HUEHUEHUE ",Printable)
 	# if builder.current_task == "idle":
 	# builder.set_curr_task("assembling")
 	# builder.set_task_dur(AssembleCost_Time)
@@ -288,7 +268,7 @@ def assemble(builder,tobuild):
 		else :
 			RobotQuality = AssemblerQuality
 		
-		newRobot = Robot(tobuild,RobotQuality,builder.beingbuiltlist.pop(0))
+		newRobot = Robot(tobuild,RobotQuality,builder.beingbuiltlist.pop(0)[1:])
 		# builder.beingbuiltlist.pop(0)
 		return newRobot
 	else:
@@ -319,8 +299,9 @@ def main():
 	# newRobot = assemble(robot,"Normal")
 	# print(robot)
 	# print(newRobot)
-
+	totlist = [robot]
 	robotlist = [robot]
+	useless = []
 
 	listPrintable = [100.0]
 	listNonPr = [300.0]
@@ -345,58 +326,68 @@ def main():
 	# use lists
 	tcoordslist = []
 	rcoordslist = []
+	wastecoordslist = []
 	for t in range(0,timesteps):
 		numbeingbuilt = 0
 		for i in range(len(robotlist)):
 			#print(t,len(robotlist),robotlist[i].id,robotlist[i].current_task,robotlist[i].tasks_dur)
 			# if(robotlist[i].current_task=="idle"):
+			
+			# IDLE
 			if(robotlist[i].current_task=="idle"):
+				# Replicator
 				if(robotlist[i].type == "Replicator"):
-					if(assemblecheck(robotlist[i],"Normal")):
+					
+					if(assembleCheck(robotlist[i],"Normal")):
 						canAssemble = assembling(robotlist[i],"Normal")
-					# print(t,canAssemble)
+					
+					# else make print tasks? canPrint()?
 					else:
 						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
 						robotlist[i].set_task_dur(0)
 						robotlist[i].set_curr_task("idle")
 					
-
+				# Normal
 				elif(robotlist[i].type == "Normal"):
-					canCollect = collect(robotlist[i])
+					canCollect = collectCheck(robotlist[i])
 					# print(t,robotlist[i].id,canCollect)
 					if canCollect:
 						collecting(robotlist[i])
 
-			
+			# NOT IDLE
 			else:
+				# reduce task duration every time step
 				if(robotlist[i].tasks_dur - 1 != 0):
-				# if(robotlist[i].current_task != "idle"):
 					robotlist[i].set_task_dur(robotlist[i].tasks_dur - 1)
 				
+				# for replicator robot
 				elif(robotlist[i].tasks_dur - 1 == 0 and robotlist[i].type == "Replicator"):
-					if(assemblecheck(robotlist[i],"Normal")):
+					# check if it can keep assembling
+					if(assembleCheck(robotlist[i],"Normal")):
 						canAssemble = assembling(robotlist[i],"Normal")
 					else:
 						canAssemble = False
 						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
 						robotlist[i].set_task_dur(0)
 						robotlist[i].set_curr_task("idle")
-					# print(canAssemble)
-					# if canAssemble:
-					# 	if(robotlist[i].get_curr_task()=="assembling"):
+					
+					# it enters this loop only when it has to pop a new robot
 					newbot = assemble(robotlist[i],"Normal")
-					if newbot:
+					if newbot and newbot.build_qual>=0.5:
 						if(newbot.type == "Normal"):
-							canCollect = collect(newbot)
+							canCollect = collectCheck(newbot)
 							if canCollect:
 								collecting(newbot)
-						# print(newbot)
+						totlist.append(newbot)
 						robotlist.append(newbot)
+					else:
+						totlist.append(newbot)
+						useless.append(newbot)
 					robotlist[i].set_prev_task(robotlist[i].current_task)
 
-
+				# for normal robot
 				elif(robotlist[i].type == "Normal"):
-					canCollect = collect(robotlist[i])
+					canCollect = collectCheck(robotlist[i])
 					if(canCollect):
 						collecting(robotlist[i])
 					else:
@@ -406,29 +397,22 @@ def main():
 
 				else:
 					# robotlist[i].set_task_dur(0)
-					if(robotlist[i].get_curr_task()=="assembling"):
+					if(robotlist[i].get_curr_task()=="assembling" and robotlist[i].type=="Replicator"):
 						newbot = assemble(robotlist[i],"Normal")
-						if newbot:
+						if newbot and newbot.build_qual>=0.5:
+							totlist.append(newbot)
 							robotlist.append(newbot)
+						else:
+							totlist.append(newbot)
+							useless.append(newbot)
 					robotlist[i].set_prev_task(robotlist[i].current_task)
 					robotlist[i].set_task_dur(0)
 					robotlist[i].set_curr_task("idle")
-
-			# if(robotlist[i].current_task == "assembling"):
-			# 	numbeingbuilt = numbeingbuilt+1
-
-
-
-		#ax.add_patch(Rectangle((t-0.4, 0), 0.8, numbeingbuilt)) # replace 1 with numbeingbuilt
-		
-
-		
 
 		n_replicator = 0
 		n_normal = 0
 		n_assembler = 0
 		n_printer = 0
-
 
 		c_flag = 0
 		p_flag = 0
@@ -472,11 +456,14 @@ def main():
 		listnumAssembling.append(a_flag)
 	
 
+		
+		df.loc[len(df)] = [t,NonPr,Printable,Materials,Env_Materials,n_replicator,n_normal,n_assembler,n_printer,a_flag,p_flag,c_flag,i_flag,avg_build_qual]
+		
 		print("="*50)
+		# print(len(useless))
+		
 		# print(t,":",len(robotlist),[NonPr,Printable,Materials,Env_Materials])
 		# ["Time","NonPr","Printable","Materials","Env_Materials","Replicator","Normal","Assembler","Printer","Assemble","Print","Collect","Idle"]
-
-		df.loc[len(df)] = [t,NonPr,Printable,Materials,Env_Materials,n_replicator,n_normal,n_assembler,n_printer,a_flag,p_flag,c_flag,i_flag,avg_build_qual]
 		
 		# print("Time\t\t",t)
 		# print("#Replicator:\t",n_replicator)
@@ -490,27 +477,28 @@ def main():
 		# print("#Collect:\t",c_flag)
 		# print("#Idle:\t\t",i_flag)
 
-		
-
-
-
 		ids=[]
-		for j in robotlist:
-			print(t,len(robotlist),j.id,j.current_task,j.get_task_dur())
+		for j in totlist:
+			isWaste = False
+			if j.build_qual<QualityThreshold:
+				isWaste = True
+			print(t,len(robotlist),j.id,j.current_task,j.get_task_dur(),isWaste)
 			ids.append(j.id)
 		
 		tcoordslist.append(t)
 		rcoordslist.append(len(robotlist)) 
+		wastecoordslist.append(len(useless))
 
 		# plt.scatter(t,len(robotlist),marker=".", c="black")
 		# plt.scatter(t,listnumCollecting[t],marker=".", c="red")
 		# plt.scatter(t,listnumPrinting[t],marker="x", c="green")
 		# plt.scatter(t,listnumAssembling[t],marker="+", c="blue")
 	
-	plt.plot(tcoordslist,rcoordslist,color = "blue",label = "numcurrent")
-	plt.bar(tcoordslist,listnumAssembling,width=0.5,label = "numbeingbuilt")
+	plt.plot(tcoordslist,rcoordslist,color = "blue",label = "Current Number of Robots")
+	plt.plot(tcoordslist,wastecoordslist,color = "red",label = "Current Number of Wasted Robots")
+	plt.bar(tcoordslist,listnumAssembling,width=0.5,label = "Number of Robots being built")
 	curr_built = [x + y for (x, y) in zip(rcoordslist, listnumAssembling)] 
-	plt.scatter(tcoordslist,curr_built,marker=".",color="black",label = "numcurrent+numbeingbuilt")
+	plt.scatter(tcoordslist,curr_built,marker=".",color="black",label = "Total in Service")
 	plt.legend()
 	plt.show()
 
