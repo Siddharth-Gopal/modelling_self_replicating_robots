@@ -29,12 +29,12 @@ plt.grid(axis='y')
 random.seed()
 
 # global variables
-rid = 1
+rid = 1 #Defined as one since we are starting with a replicator
 nid = 0
 aid = 0
 pid = 0
 
-# simulation parameters
+# simulation parameters that remain constant throughout the simulation
 Num_Steps = 100				#; % Number of iterations/time-steps that the simulation goes through.
 NonPr = 300.0 				#; % The robot system=s starting quantity of nonprintable components.
 Printable = 100.0 			#; % The robot system’s starting quantity of printable components.
@@ -66,6 +66,7 @@ RiskQuality_Modifier = 5.0 	#; % Multiplier for impact of quality defects on ris
 RiskFactory_Modifier = 0.1 	#; % Multiplier for impact of factory-made robots on risk amount
 
 # [replicator,normal,assembler,printer]
+# Printable and Non printable Resource requirement for each robot
 cost_Pr = [6,2,4,4]			#; % Total cost printable
 cost_NonPr = [3,1,2,2]		#; % Total cost nonprintable
 
@@ -125,15 +126,7 @@ class Robot:
 def printResources():
 	print(NonPr,Printable,Materials,Env_Materials)
 
-# task functions
-def collecting(robot):
-	global Materials, Env_Materials, Collect_Amount
-	robot.set_curr_task("collecting")
-	robot.set_task_dur(1)
-	Materials = Materials + Collect_Amount
-	Env_Materials = Env_Materials - Collect_Amount
-
-# collecting
+# Checks if resources are available to collect from environment
 def collectCheck(robot):
 	global Materials, Env_Materials, Collect_Amount
 	if (Env_Materials - Collect_Amount >= 0):
@@ -143,56 +136,54 @@ def collectCheck(robot):
 	else:
 		return False
 
-# build robot task - assembler and replicator
-# assemble task
+# Reduces resources from the environment(Happens when the task in ongoing) and updates robot task(This happens when the task is finished)
+def collecting(robot):
+	global Materials, Env_Materials, Collect_Amount
+	robot.set_curr_task("collecting")
+	robot.set_task_dur(1)
+	Materials = Materials + Collect_Amount
+	Env_Materials = Env_Materials - Collect_Amount
 
-def assembleCheck(robot,tobuild):
-	global rid,nid,aid,pid,Printable,NonPr,Quality_incr_Chance,Quality_incr_Lower, Quality_incr_Upper
-	
+
+# Checks if resources are available to assemble from printable and non-printable
+def assembleCheck(_,tobuild):
+
 	if(tobuild == "Replicator"):
 		i=0
-		# rid = rid+1
-		# robotid = rid
+
 	if(tobuild == "Normal"):
 		i=1
-		# nid = nid+1
-		# robotid = nid
+
 	if(tobuild == "Assembler"):
 		i=2
-		# aid = aid+1
-		# robotid = aid
+
 	if(tobuild == "Printer"):
 		i=3
-		# pid = pid+1
-		# robotid = pid
 
 	if Printable - cost_Pr[i] >= 0 and NonPr - cost_NonPr[i] >= 0:
 		return True
 	else:
 		return False
 
-
+# Assigns the robot assembling task reduce resources from printable and non-printable and add to assemble queue
 def assembling(robot,tobuild):
 	global rid,nid,aid,pid,Printable,NonPr,Quality_incr_Chance,Quality_incr_Lower, Quality_incr_Upper
 	
 	if(tobuild == "Replicator"):
 		i=0
-		# rid = rid+1
-		# robotid = rid
+
 	if(tobuild == "Normal"):
 		i=1
-		# nid = nid+1
-		# robotid = nid
+
 	if(tobuild == "Assembler"):
 		i=2
-		# aid = aid+1
-		# robotid = aid
+
 	if(tobuild == "Printer"):
 		i=3
-		# pid = pid+1
-		# robotid = pid
+
 
 	if Printable - cost_Pr[i] >= 0 and NonPr - cost_NonPr[i] >= 0:
+		robot.set_prev_task(robot.get_curr_task())
 		robot.set_curr_task("assembling")
 		robot.set_task_dur(AssembleCost_Time)
 		if(robot.type=="Assembler" or robot.type=="Replicator"):
@@ -219,43 +210,29 @@ def assembling(robot,tobuild):
 		robot.beingbuiltlist.append(tobuild[0]+str(robotid))
 		return True
 	else:
+		robot.set_prev_task(robot.get_curr_task())
 		robot.set_curr_task("idle")
 		robot.set_task_dur(0)
 		return False
 
-		
-
-def assemble(builder,tobuild):
+# Assigns a build quality and creates new robot object and returns it
+def assemble(robot,tobuild):
 	global rid,nid,aid,pid,Printable,NonPr,Quality_incr_Chance,Quality_incr_Lower, Quality_incr_Upper
-	# print("HUEHUEHUE ",Printable)
-	# if builder.current_task == "idle":
-	# builder.set_curr_task("assembling")
-	# builder.set_task_dur(AssembleCost_Time)
 
-
-	# builder.set_prev_task(builder.get_curr_task())
-	# builder.set_curr_task("assembling")
-	# builder.set_task_dur(AssembleCost_Time)
-
-	if(builder.type=="Assembler" or builder.type=="Replicator"):
+	if(robot.type=="Assembler" or robot.type=="Replicator"):
 		if(tobuild == "Replicator"):
 			i=0
-			# rid = rid+1
-			# robotid = rid
+
 		if(tobuild == "Normal"):
 			i=1
-			# nid = nid+1
-			# robotid = nid
+
 		if(tobuild == "Assembler"):
 			i=2
-			# aid = aid+1
-			# robotid = aid
+
 		if(tobuild == "Printer"):
 			i=3
-			# pid = pid+1
-			# robotid = pid
 
-		AssemblerQuality = builder.get_buid_qual()
+		AssemblerQuality = robot.get_buid_qual()
 		# robot's build quality		
 		rand = round(random.uniform(0,1),2)
 		if rand > round((1.0 - Quality_incr_Chance/100),2):
@@ -265,8 +242,7 @@ def assemble(builder,tobuild):
 		else :
 			RobotQuality = AssemblerQuality
 		
-		newRobot = Robot(tobuild,RobotQuality,builder.beingbuiltlist.pop(0)[1:])
-		# builder.beingbuiltlist.pop(0)
+		newRobot = Robot(tobuild,RobotQuality,robot.beingbuiltlist.pop(0)[1:])
 		return newRobot
 	else:
 		return None
@@ -285,52 +261,28 @@ def printing(robot):
 		pass
 
 def main():
-	numbeingbuilt = 0
-	init_build_qual = random.uniform(0.55, 0.95)
+
+	init_build_qual = random.uniform(0.65, 0.95)
 	robot = Robot("Replicator",init_build_qual,rid)
 	df = pd.DataFrame(columns = ["Time","NonPr","Printable","Materials","Env_Materials","Replicator","Normal","Assembler","Printer","Assemble","Print","Collect","Idle","Average Build Quality"])
 
-	# commence tasks
-	# collecting(robot)
-	# printing(robot)
-	# newRobot = assemble(robot,"Normal")
-	# print(robot)
-	# print(newRobot)
 	totlist = [robot]
 	robotlist = [robot]
 	useless = []
 
-	listPrintable = [100.0]
-	listNonPr = [300.0]
-	listMaterials = [50.0]
-	listEnv_Materials = [500.0]
-
-	listnumIdle = []
-	# total number of bots
-	listnumReplicator = []
-	listnumNormal = []
-	listnumAssembler = []
-	listnumPrinter = []
-
-	
 	# number of bots working
 	listnumCollecting = []
 	listnumPrinting = []
 	listnumAssembling = []
 
-
-	check = 0
-	# use lists
 	tcoordslist = []
 	rcoordslist = []
 	wastecoordslist = []
+
 	for t in range(0,timesteps):
-		numbeingbuilt = 0
+
 		for i in range(len(robotlist)):
-			#print(t,len(robotlist),robotlist[i].id,robotlist[i].current_task,robotlist[i].tasks_dur)
-			# if(robotlist[i].current_task=="idle"):
-			
-			# IDLE
+
 			if(robotlist[i].current_task=="idle"):
 				# Replicator
 				if(robotlist[i].type == "Replicator"):
