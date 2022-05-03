@@ -91,8 +91,6 @@ class Robot:
 			self.tasks = ["Collect","Print"]
 		self.num_tasks = len(self.tasks)
 
-		
-
 	def __str__(self):
 		return str(self.id)+" "+str(self.current_task)
 
@@ -167,7 +165,6 @@ def assembleCheck(robot,tobuild):
 		i=3
 		# pid = pid+1
 		# robotid = pid
-
 
 	if Printable - cost_Pr[i] >= 0 and NonPr - cost_NonPr[i] >= 0:
 		return True
@@ -289,7 +286,7 @@ def printing(robot):
 
 def main():
 	numbeingbuilt = 0
-	init_build_qual = random.uniform(0.85, 0.95)
+	init_build_qual = random.uniform(0.55, 0.95)
 	robot = Robot("Replicator",init_build_qual,rid)
 	df = pd.DataFrame(columns = ["Time","NonPr","Printable","Materials","Env_Materials","Replicator","Normal","Assembler","Printer","Assemble","Print","Collect","Idle","Average Build Quality"])
 
@@ -482,7 +479,7 @@ def main():
 			isWaste = False
 			if j.build_qual<QualityThreshold:
 				isWaste = True
-			print(t,len(robotlist),j.id,j.current_task,j.get_task_dur(),isWaste)
+			print(t,len(totlist),j.id,j.current_task,j.get_task_dur(),isWaste)
 			ids.append(j.id)
 		
 		tcoordslist.append(t)
