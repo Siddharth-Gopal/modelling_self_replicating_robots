@@ -299,6 +299,10 @@ def main():
 		"Average Build Quality in-service","Average Build Quality of System",
 		"#WasteReplicator","#WasteNormal","#WasteAssembler","#WastePrinter"])
 
+	#Creating data frame to store data of each time step
+	# df = pd.DataFrame(columns = ["Time","NonPr","Printable","Materials","Env_Materials","#Replicator","#Normal","#Assembler","#Printer","#Assemble","#Print","#Collect","#Idle","#In","#Out","Average Build Quality"])
+
+	#Building first robot(replicator)
 	robot = Robot("Replicator",init_build_qual,rid)
 
 	#Lists to track the number of robots being built
