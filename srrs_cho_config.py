@@ -30,7 +30,7 @@ fig, ax = plt.subplots(3,2)
 random.seed()
 
 # global variables
-rid = 0
+rid = 1
 nid = 0
 aid = 0
 pid = 0
@@ -299,7 +299,6 @@ def main():
 		"Average Build Quality in-service","Average Build Quality of System",
 		"#WasteReplicator","#WasteNormal","#WasteAssembler","#WastePrinter"])
 	
-	rid += 1
 	robot = Robot("Replicator",init_build_qual,rid)
 	
 	totlist = [robot]

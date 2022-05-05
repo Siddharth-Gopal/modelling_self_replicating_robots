@@ -30,7 +30,7 @@ fig, ax = plt.subplots(3,2)
 random.seed()
 
 # global variables
-rid = 0
+rid = 1
 nid = 0
 aid = 0
 pid = 0
@@ -299,12 +299,6 @@ def main():
 		"Average Build Quality in-service","Average Build Quality of System",
 		"#WasteReplicator","#WasteNormal","#WasteAssembler","#WastePrinter"])
 
-	rid += 1
-
-	#Creating data frame to store data of each time step
-	# df = pd.DataFrame(columns = ["Time","NonPr","Printable","Materials","Env_Materials","#Replicator","#Normal","#Assembler","#Printer","#Assemble","#Print","#Collect","#Idle","#In","#Out","Average Build Quality"])
-
-	#Building first robot(replicator)
 	robot = Robot("Replicator",init_build_qual,rid)
 
 	#Lists to track the number of robots being built
@@ -321,6 +315,7 @@ def main():
 	tcoordslist = []
 	rcoordslist = []
 	wastecoordslist = []
+	t_build_quality_list = []
 
 	#For loop for each time step
 	for t in range(0,timesteps):
