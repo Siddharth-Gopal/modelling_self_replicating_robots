@@ -375,7 +375,7 @@ def main():
 					# checking if robot can collect
 					elif(collectCheck()):
 						# Starting the collecting process + reducing resources
-						collecting()
+						collecting(robotlist[i])
 
 					# If can't do any task then set robot to idle
 					else:
