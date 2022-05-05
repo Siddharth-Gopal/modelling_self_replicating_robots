@@ -309,16 +309,14 @@ def main():
 	listnumPrinting = []
 	listnumAssembling = []
 
-
-	check = 0
 	# use lists
 	tcoordslist = []
 	rcoordslist = []
 	wastecoordslist = []
-
 	t_build_quality_list = []
+
 	for t in range(0,timesteps):
-		numbeingbuilt = 0
+		
 		for i in range(len(robotlist)):
 			# IDLE
 			if(robotlist[i].current_task=="idle"):
