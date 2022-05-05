@@ -30,7 +30,7 @@ fig, ax = plt.subplots(3,2)
 random.seed()
 
 # global variables
-rid = 1
+rid = 0
 nid = 0
 aid = 0
 pid = 0
@@ -298,6 +298,8 @@ def main():
 		"#In","#Out",
 		"Average Build Quality in-service","Average Build Quality of System",
 		"#WasteReplicator","#WasteNormal","#WasteAssembler","#WastePrinter"])
+	
+	rid += 1
 	robot = Robot("Replicator",init_build_qual,rid)
 	
 	totlist = [robot]
@@ -338,6 +340,10 @@ def main():
 					# print(t,robotlist[i].id,canCollect)
 					if canCollect:
 						collecting(robotlist[i])
+					else:
+						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
+						robotlist[i].set_task_dur(0)
+						robotlist[i].set_curr_task("idle")
 
 			# NOT IDLE
 			else:
@@ -379,6 +385,8 @@ def main():
 					if(canCollect):
 						collecting(robotlist[i])
 					else:
+						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
+						robotlist[i].set_task_dur(0)
 						robotlist[i].set_curr_task("idle")
 				
 		n_replicator = 0
