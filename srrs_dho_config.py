@@ -138,8 +138,8 @@ class Robot:
 def printResources():
 	print(NonPr,Printable,Materials,Env_Materials)
 
-# check if robot can collect from Env_Materials
-def collectCheck(robot):
+# Checks if resources are available to collect from environment
+def collectCheck():
 	global Materials, Env_Materials, Collect_Amount
 	if (Env_Materials - Collect_Amount >= 0):
 		# Materials = Materials + Collect_Amount
@@ -148,7 +148,7 @@ def collectCheck(robot):
 	else:
 		return False
 
-# task function - collecting
+# Reduces resources from the environment(Happens when the task in ongoing) and updates robot task(This happens when the task is finished)
 def collecting(robot):
 	global Materials, Env_Materials, Collect_Amount
 	robot.set_prev_task(robot.get_curr_task())
@@ -157,10 +157,8 @@ def collecting(robot):
 	Materials = Materials + Collect_Amount
 	Env_Materials = Env_Materials - Collect_Amount
 
-# build robot task - assembler and replicator
-# assemble task
-
-def assembleCheck(robot,tobuild):
+# Checks if resources are available to assemble from printable and non-printable
+def assembleCheck(tobuild):
 	# global rid,nid,aid,pid,Printable,NonPr,Quality_incr_Chance,Quality_incr_Lower, Quality_incr_Upper
 	
 	if(tobuild == "Replicator"):
@@ -185,7 +183,7 @@ def assembleCheck(robot,tobuild):
 	else:
 		return False
 
-
+# Assigns the robot assembling task, reduce resources from printable and non-printable and add to assemble queue
 def assembling(robot,tobuild):
 	global rid,nid,aid,pid,Printable,NonPr,Quality_incr_Chance,Quality_incr_Lower, Quality_incr_Upper
 	
@@ -205,6 +203,7 @@ def assembling(robot,tobuild):
 	robot.set_prev_task(robot.get_curr_task())
 	robot.set_curr_task("assembling")
 	robot.set_task_dur(taskDur)
+
 	if(robot.type=="Assembler" or robot.type=="Replicator"):
 		if(tobuild == "Replicator"):
 			i=0
@@ -235,8 +234,7 @@ def assembling(robot,tobuild):
 		robot.set_task_dur(0)
 		return False
 
-		
-
+# Assigns a build quality and creates new robot object and returns it
 def assemble(builder,tobuild):
 	global rid,nid,aid,pid,Printable,NonPr,Quality_incr_Chance,Quality_incr_Lower, Quality_incr_Upper
 	
@@ -256,18 +254,19 @@ def assemble(builder,tobuild):
 		AssemblerQuality = builder.get_buid_qual()
 		# robot's build quality		
 		rand = round(random.uniform(0,1),decimalPlaces)
+
 		if rand > round((1.0 - Quality_incr_Chance/100),decimalPlaces):
 			RobotQuality = AssemblerQuality + random.uniform(Quality_incr_Lower, Quality_incr_Upper)
 		elif rand < Quality_decr_Chance :
 			RobotQuality = AssemblerQuality - random.uniform(Quality_decr_Lower, Quality_decr_Upper)
 		else :
 			RobotQuality = AssemblerQuality
-		print(builder,builder.beingbuiltlist)
-		newRobot = Robot(tobuild,RobotQuality,builder.beingbuiltlist.pop(0)[1:])
+
+		newRobot = Robot(tobuild, RobotQuality, builder.beingbuiltlist.pop(0)[1:])
+
 		return newRobot
 	else:
 		return None
-
 
 def printCheck(robot):
 	if(robot.type=="Replicator" or robot.type=="Printer"):
@@ -288,106 +287,162 @@ def printing(robot):
 	Printable = Printable + (Print_Efficiency*Print_Amount)
 
 def main():
-	
+
+	#Setting build quality according
 	build_qual_range = [0.85,0.95]
 	init_build_qual = random.uniform(build_qual_range[0],build_qual_range[1])
-	
+
+	#Creating data frame to store data of each time step
 	df = pd.DataFrame(columns = ["Time","NonPr","Printable","Materials","Env_Materials","#Replicator","#Normal","#Assembler","#Printer","#Assemble","#Print","#Collect","#Idle","#In","#Out","Average Build Quality"])
+
+	#Building first robot(replicator)
 	robot = Robot("Replicator",init_build_qual,rid)
-	
+
+	#Lists to track the number of robots being built
 	totlist = [robot]
 	robotlist = [robot]
 	useless = []
 	
-	# number of bots working
+	#To calculate number of bots of each type on each time step
 	listnumCollecting = []
 	listnumPrinting = []
 	listnumAssembling = []
 
-
-	check = 0
-	# use lists
+	#Lists used for visualization
 	tcoordslist = []
 	rcoordslist = []
 	wastecoordslist = []
+
+	#For loop for each time step
 	for t in range(0,timesteps):
-		numbeingbuilt = 0
+
+		#Parsing through complete robot list to check their availability
 		for i in range(len(robotlist)):
-			# IDLE
+			#Checking if robot is idle
 			if(robotlist[i].current_task=="idle"):
-				
-				# Replicator
+
+				#If idle and replicator
 				if(robotlist[i].type == "Replicator"):
-					if(assembleCheck(robotlist[i],"Replicator")):
-						isAssembling = assembling(robotlist[i],"Replicator")
+
+					#Checking if robot can assemble
+					if(assembleCheck("Replicator")):
+						#Starting the assembly process + reducing resources
+						assembling(robotlist[i],"Replicator")
+
+					#checking if robot can print
 					elif(printCheck(robotlist[i])):
-						isPrinting = printing(robotlist[i])	
-					elif(collectCheck(robotlist[i])):
-						collecting(robotlist[i])	
+						#Starting the printing process + reducing resources
+						printing(robotlist[i])
+
+					#checking if robot can collect
+					elif(collectCheck()):
+						#Starting the collecting process + reducing resources
+						collecting(robotlist[i])
+
+					#If can't do any task then set robot to idle
 					else:
 						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
 						robotlist[i].set_task_dur(0)
 						robotlist[i].set_curr_task("idle")
 					
-				# Normal
+				#If idle and collector
 				elif(robotlist[i].type == "Normal"):
-					canCollect = collectCheck(robotlist[i])
-					# print(t,robotlist[i].id,canCollect)
-					if canCollect:
+					# checking if robot can collect
+					if (collectCheck()):
+						# Starting the collecting process + reducing resources
 						collecting(robotlist[i])
 
-			# NOT IDLE
+			#If robot is not idle
 			else:
-				# reduce task duration every time step
+
+				#Reduce task duration if task not ending in the next time step
 				if(robotlist[i].tasks_dur - 1 != 0):
 					robotlist[i].set_task_dur(robotlist[i].tasks_dur - 1)
 				
-				# Replicator 
+				#If task is ending in the next time step and Replicator
 				elif(robotlist[i].tasks_dur - 1 == 0 and robotlist[i].type == "Replicator"):
+
 					# check if it can keep assembling next time step
-					if(assembleCheck(robotlist[i],"Replicator")):
-						isAssembling = assembling(robotlist[i],"Replicator")
+					if(assembleCheck("Replicator")):
+						# Starting the assembly process + reducing resources
+						assembling(robotlist[i],"Replicator")
+
+					# checking if robot can print
 					elif(printCheck(robotlist[i])):
-						isPrinting = printing(robotlist[i])	
-					elif(collectCheck(robotlist[i])):
-						collecting(robotlist[i])	
+						# Starting the printing process + reducing resources
+						printing(robotlist[i])
+
+					# checking if robot can collect
+					elif(collectCheck()):
+						# Starting the collecting process + reducing resources
+						collecting()
+
+					# If can't do any task then set robot to idle
 					else:
 						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
 						robotlist[i].set_task_dur(0)
 						robotlist[i].set_curr_task("idle")
 					
-					# it enters this loop only when it has to pop a new robot
+					#If robot task is ending in the next step
+					#Create a new robot for the robot list that can start working the next cycle
 					if(robotlist[i].get_prev_task()=="assembling"):
+
+						# Build a new replicator
 						newbot = assemble(robotlist[i],"Replicator")
+
+						# If newbot passes the quality check
 						if newbot and newbot.build_qual>=0.5:
+
+							#If newbot is a collector
 							if(newbot.type == "Normal"):
-								canCollect = collectCheck(newbot)
-								if canCollect:
+								# checking if robot can collect
+								if(collectCheck()):
+									# Starting the collecting process + reducing resources
 									collecting(newbot)
+
+							# If newbot is a Replicator
 							if(newbot.type == "Replicator"):
-								if(assembleCheck(newbot,"Replicator")):
-									isAssembling = assembling(newbot,"Replicator")
-								elif(printCheck(robotlist[i])):
-									isPrinting = printing(robotlist[i])	
-								elif(collectCheck(robotlist[i])):
-									collecting(robotlist[i])	
+
+								# Checking if robot can assemble
+								if (assembleCheck("Replicator")):
+									# Starting the assembly process + reducing resources
+									assembling(robotlist[i], "Replicator")
+
+								# checking if robot can print
+								elif (printCheck(robotlist[i])):
+									# Starting the printing process + reducing resources
+									printing(robotlist[i])
+
+								# checking if robot can collect
+								elif (collectCheck()):
+									# Starting the collecting process + reducing resources
+									collecting(robotlist[i])
+
+								# If can't do any task then set robot to idle
 								else:
-									newbot.set_prev_task(robotlist[i].get_curr_task())
-									newbot.set_task_dur(0)
-									newbot.set_curr_task("idle")
+									robotlist[i].set_prev_task(robotlist[i].get_curr_task())
+									robotlist[i].set_task_dur(0)
+									robotlist[i].set_curr_task("idle")
+
+							#Adding the newbot to the total robot list and robot list
 							totlist.append(newbot)
 							robotlist.append(newbot)
+
+						# If newbot does not pass the quality check
 						else:
+							# Adding the newbot to the total robot list and useless list
 							totlist.append(newbot)
 							useless.append(newbot)
-						robotlist[i].set_prev_task(robotlist[i].current_task)
 
-				# Normal
+				#If task is ending in the next time step and Collector
 				elif(robotlist[i].type == "Normal"):
-					canCollect = collectCheck(robotlist[i])
-					if(canCollect):
+
+					# checking if robot can collect
+					if(collectCheck()):
+						# Starting the collecting process + reducing resources
 						collecting(robotlist[i])
 					else:
+						# set current task to idle if can not collect
 						robotlist[i].set_curr_task("idle")
 				
 		n_replicator = 0
