@@ -106,6 +106,7 @@ class Robot:
 		if(self.current_task == "printing"):
 			self.tasks_dur = 2
 
+
 	# methods of robot object
 	def set_prev_task(self,tasktype):
 		self.prev_task = tasktype
@@ -165,7 +166,7 @@ def assembleCheck(_,tobuild):
 	else:
 		return False
 
-# Assigns the robot assembling task reduce resources from printable and non-printable and add to assemble queue
+# Assigns the robot assembling task, reduce resources from printable and non-printable and add to assemble queue
 def assembling(robot,tobuild):
 	global rid,nid,aid,pid,Printable,NonPr,Quality_incr_Chance,Quality_incr_Lower, Quality_incr_Upper
 	
