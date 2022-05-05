@@ -551,13 +551,8 @@ def main():
 
 		
 		#plt.legend(bbox_to_anchor=(1.05, 1.0, 0.3, 0.2), loc='upper left')
-		plt.legend()
-		
+		plt.legend()		
 		plt.show()
-
-
-	
-	
 
 	df.to_csv("srrs_cho.csv")
 
