@@ -30,7 +30,7 @@ fig, ax = plt.subplots(3,2)
 random.seed()
 
 # global variables
-rid = 1
+rid = 0
 nid = 0
 aid = 0
 pid = 0
@@ -291,9 +291,18 @@ def main():
 	#Setting build quality according
 	build_qual_range = [0.85,0.95]
 	init_build_qual = random.uniform(build_qual_range[0],build_qual_range[1])
+	
+	df = pd.DataFrame(columns = ["Time","NonPr","Printable","Materials","Env_Materials",
+		"#Replicator","#Normal","#Assembler","#Printer",
+		"#Assembling","#Printing","#Collecting","#Idle",
+		"#In","#Out",
+		"Average Build Quality in-service","Average Build Quality of System",
+		"#WasteReplicator","#WasteNormal","#WasteAssembler","#WastePrinter"])
+
+	rid += 1
 
 	#Creating data frame to store data of each time step
-	df = pd.DataFrame(columns = ["Time","NonPr","Printable","Materials","Env_Materials","#Replicator","#Normal","#Assembler","#Printer","#Assemble","#Print","#Collect","#Idle","#In","#Out","Average Build Quality"])
+	# df = pd.DataFrame(columns = ["Time","NonPr","Printable","Materials","Env_Materials","#Replicator","#Normal","#Assembler","#Printer","#Assemble","#Print","#Collect","#Idle","#In","#Out","Average Build Quality"])
 
 	#Building first robot(replicator)
 	robot = Robot("Replicator",init_build_qual,rid)
@@ -351,6 +360,10 @@ def main():
 					if (collectCheck()):
 						# Starting the collecting process + reducing resources
 						collecting(robotlist[i])
+					else:
+						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
+						robotlist[i].set_task_dur(0)
+						robotlist[i].set_curr_task("idle")
 
 			#If robot is not idle
 			else:
@@ -442,6 +455,8 @@ def main():
 						# Starting the collecting process + reducing resources
 						collecting(robotlist[i])
 					else:
+						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
+						robotlist[i].set_task_dur(0)
 						# set current task to idle if can not collect
 						robotlist[i].set_curr_task("idle")
 				
