@@ -20,11 +20,11 @@ from matplotlib.patches import Rectangle
 
 
 timesteps = 120
-fig, ax = plt.subplots()
-plt.title("SRRS - DHO Config.")
-plt.xlabel("Time")
-plt.ylabel("Number of robots")
-plt.grid(axis='y')
+fig, ax = plt.subplots(3,2)
+# plt.title("SRRS - DHO Config.")
+# plt.xlabel("Time")
+# plt.ylabel("Number of robots")
+# plt.grid(axis='y')
 
 # set random number generator
 random.seed()
@@ -262,7 +262,7 @@ def assemble(builder,tobuild):
 			RobotQuality = AssemblerQuality - random.uniform(Quality_decr_Lower, Quality_decr_Upper)
 		else :
 			RobotQuality = AssemblerQuality
-		print(builder,builder.beingbuiltlist)
+		# print(builder,builder.beingbuiltlist)
 		newRobot = Robot(tobuild,RobotQuality,builder.beingbuiltlist.pop(0)[1:])
 		return newRobot
 	else:
@@ -292,7 +292,12 @@ def main():
 	build_qual_range = [0.85,0.95]
 	init_build_qual = random.uniform(build_qual_range[0],build_qual_range[1])
 	
-	df = pd.DataFrame(columns = ["Time","NonPr","Printable","Materials","Env_Materials","#Replicator","#Normal","#Assembler","#Printer","#Assemble","#Print","#Collect","#Idle","#In","#Out","Average Build Quality"])
+	df = pd.DataFrame(columns = ["Time","NonPr","Printable","Materials","Env_Materials",
+		"#Replicator","#Normal","#Assembler","#Printer",
+		"#Assembling","#Printing","#Collecting","#Idle",
+		"#In","#Out",
+		"Average Build Quality in-service","Average Build Quality of System",
+		"#WasteReplicator","#WasteNormal","#WasteAssembler","#WastePrinter"])
 	robot = Robot("Replicator",init_build_qual,rid)
 	
 	totlist = [robot]
@@ -310,6 +315,8 @@ def main():
 	tcoordslist = []
 	rcoordslist = []
 	wastecoordslist = []
+
+	t_build_quality_list = []
 	for t in range(0,timesteps):
 		numbeingbuilt = 0
 		for i in range(len(robotlist)):
@@ -400,7 +407,18 @@ def main():
 		a_flag = 0
 		i_flag = 0
 
-		tot_build_qual = 0
+		useless_c_flag = 0
+		useless_p_flag = 0
+		useless_a_flag = 0
+		useless_r_flag = 0
+
+
+
+		tot_build_qual_inservice = 0
+		tot_build_qual_inoutservice = 0
+
+		build_quality_list = []
+		
 		# print(t)
 		for i in robotlist:
 			if i.current_task=="collecting":
@@ -423,15 +441,32 @@ def main():
 			if(i.type== "Printer"):
 				n_printer += 1;
 
-			tot_build_qual = tot_build_qual + i.get_buid_qual()
+			tot_build_qual_inservice = tot_build_qual_inservice + i.get_buid_qual()
 
-		avg_build_qual = round(tot_build_qual/len(robotlist),decimalPlaces)
+		for i in useless:
+			if(i.type=="Replicator"):
+				useless_r_flag += 1;
+			if(i.type== "Normal"):
+				useless_c_flag += 1;
+			if(i.type== "Assembler"):
+				useless_a_flag += 1;
+			if(i.type== "Printer"):
+				useless_p_flag += 1;
+
+		for i in totlist:
+			tot_build_qual_inoutservice = tot_build_qual_inoutservice + i.get_buid_qual()
+			plt.subplot(3,2,5)
+			plt.scatter(t,i.get_buid_qual(),marker='x',color='black',s=0.1)
+			build_quality_list.append(i.get_buid_qual())
+
+		avg_build_qual_inservice = round(tot_build_qual_inservice/len(robotlist),decimalPlaces)
+		avg_build_qual_inoutservice = round(tot_build_qual_inoutservice/len(totlist),decimalPlaces)
+		
 		listnumCollecting.append(c_flag)
 		listnumPrinting.append(p_flag)
 		listnumAssembling.append(a_flag)
 	
-		df.loc[len(df)] = [t,NonPr,Printable,Materials,Env_Materials,n_replicator,n_normal,n_assembler,n_printer,a_flag,p_flag,c_flag,i_flag,len(robotlist),len(useless),avg_build_qual]
-		print("="*50)
+		# print("="*50)
 		neatPrint = False
 		if neatPrint:
 			print("="*50)
@@ -439,13 +474,13 @@ def main():
 			print("Time\t\t",t)
 			print("#Replicator:\t",n_replicator)
 			print("#Normal:\t",n_normal)
-			print("#Assembler:\t",n_assembler)
-			print("#Printer:\t",n_printer)
+			print("#Assembling:\t",n_assembler)
+			print("#Printinger:\t",n_printer)
 			print("#Robots\t\t",len(robotlist))
 			print("Materials\t",[NonPr,Printable,Materials,Env_Materials])
-			print("#Assemble:\t",a_flag)
-			print("#Print:\t\t",p_flag)
-			print("#Collect:\t",c_flag)
+			print("#Assembling:\t",a_flag)
+			print("#Printing:\t\t",p_flag)
+			print("#Collecting:\t",c_flag)
 			print("#Idle:\t\t",i_flag)
 		
 		ids=[]
@@ -453,44 +488,92 @@ def main():
 			isWaste = False
 			if j.build_qual<QualityThreshold:
 				isWaste = True
-			print(t,len(totlist),j.id,j.current_task,j.get_task_dur(),":\t",j.build_qual)
+			# print(t,len(totlist),j.id,j.current_task,j.get_task_dur(),":\t",j.build_qual)
 			# if(j.type=="Replicator"): print(j.beingbuiltlist)
 			ids.append(j.id)
 		
+		df.loc[len(df)] = [t,NonPr,Printable,Materials,Env_Materials,
+		n_replicator,n_normal,n_assembler,n_printer,
+		a_flag,p_flag,c_flag,i_flag,
+		len(robotlist),len(useless),
+		avg_build_qual_inservice,avg_build_qual_inoutservice,
+		useless_r_flag,useless_c_flag,useless_a_flag,useless_p_flag]
+		
+		# "#WasteReplicator","#WasteNormal","#WasteAssembler","#WastePrinter"])
+
 		tcoordslist.append(t)
 		rcoordslist.append(len(robotlist)) 
 		wastecoordslist.append(len(useless))
+		t_build_quality_list.append(build_quality_list)
 
-	print(df.to_string())
+	# print(df.to_string())
 	
 	
 	# plotting	
 	flag = True
-	plotConfig = True
+	plotConfig = flag
 	if plotConfig:
-		plt.plot(tcoordslist,rcoordslist,color = "blue",label = "Current Number of Robots")
-		plt.plot(tcoordslist,wastecoordslist,color = "red",label = "Current Number of Wasted Robots")
-		plt.bar(tcoordslist,listnumAssembling,width=0.5,label = "Number of Robots being built")
+		plt.subplot(3,2,1)
+		plt.plot(tcoordslist,rcoordslist,color = "blue",label = "#Robots")
+		plt.plot(tcoordslist,wastecoordslist,color = "red",label = "#Wasted Robots")
+		plt.bar(tcoordslist,listnumAssembling,width=0.5,label = "#Being built")
 		curr_built = [x + y for (x, y) in zip(rcoordslist, listnumAssembling)] 
-		plt.scatter(tcoordslist,curr_built,marker=".",color="black",label = "Current Number + being built")
+		plt.scatter(tcoordslist,curr_built,marker=".",color="black",label = "#Robots + #Being built")
 		plt.legend()
+		
+		plt.subplot(3,2,2)
+		plt.plot(tcoordslist,df["NonPr"],label = "NonPr")
+		plt.plot(tcoordslist,df["Printable"],label = "Printable")
+		plt.plot(tcoordslist,df["Materials"],label = "Materials")
+		plt.plot(tcoordslist,df["Env_Materials"],label = "Env_Materials")
+		plt.legend()
+		plt.gca().set_xlim(left=0)
+		plt.gca().set_ylim(bottom=0)
+		
+		plt.subplot(3,2,3)
+		plt.plot(tcoordslist,df['Average Build Quality in-service'],label = "Avg. Build Quality in service")
+		plt.plot(tcoordslist,df['Average Build Quality of System'],label = "Avg. Build Quality total")
+		plt.legend()
+		plt.gca().set_xlim(left=0)
+		plt.gca().set_ylim(top=1,bottom=0)
+
+		plt.subplot(3,2,4)
+		plt.plot(tcoordslist,df["#Assembling"],label = "#Assembling")
+		plt.plot(tcoordslist,df["#Printing"],label = "#Printing")
+		plt.plot(tcoordslist,df["#Collecting"],label = "#Collecting")
+		plt.plot(tcoordslist,df["#Idle"],label = "#Idle")
+		plt.legend()
+		plt.gca().set_xlim(left=0)
+		plt.gca().set_ylim(bottom=0)
+		# plt.show()
+
+		plt.subplot(3,2,5)
+		plt.fill_between(tcoordslist, 0, [0.5]*len(tcoordslist),alpha=0.2,color='red')
+		plt.fill_between(tcoordslist, 0.5, [1]*len(tcoordslist),alpha=0.2,color='green')
+		plt.gca().set_xlim(left=0)
+		plt.gca().set_xlim(right=timesteps)
+		plt.gca().set_ylim(bottom=0)
+		plt.gca().set_ylim(top=1)
+
+		plt.subplot(3,2,6)
+		plt.plot(tcoordslist,df["#Assembler"],label = "#A(in)")
+		plt.plot(tcoordslist,df["#Printer"],label = "#P(in)")
+		plt.plot(tcoordslist,df["#Replicator"],label = "#R(in)")
+		plt.plot(tcoordslist,df["#Normal"],label = "#N(in)")
+		plt.plot(tcoordslist,df["#WasteAssembler"],label = "#A(out)",color="blue",linestyle="dashed")
+		plt.plot(tcoordslist,df["#WastePrinter"],label = "#P(out)",color="orange",linestyle="dashed")
+		plt.plot(tcoordslist,df["#WasteReplicator"],label = "#R(out)",color="green",linestyle="dashed")
+		plt.plot(tcoordslist,df["#WasteNormal"],label = "#N(out)",color="red",linestyle="dashed")
+
+		
+		#plt.legend(bbox_to_anchor=(1.05, 1.0, 0.3, 0.2), loc='upper left')
+		plt.legend()
+		
 		plt.show()
 
+
 	
-	plotDataframe = True
-	if plotDataframe:
-		fig, ax = plt.subplots()
-		ax2 = ax.twinx()
-		ax.set_title('')
-		ax.set_xlabel('Time')
-		ax.plot(df['Time'], df['Average Build Quality'], color='green')
-		ax2.plot(df['Time'], df['#Idle'], color='red')
-		ax.set_ylabel('Avg. Build Quality')
-		ax2.set_ylabel('Idle')
-		ax.legend(['Avg. Build Quality'])
-		ax2.legend(['Idle'], loc='upper center')
-		plt.show()
-	plt.close()
+	
 
 	df.to_csv("srrs_dho.csv")
 
