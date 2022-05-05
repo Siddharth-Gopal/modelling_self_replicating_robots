@@ -1,0 +1,49 @@
+Iterating through List
+======================
+
+[assemble,print,collect]
+%3 = 0 assemble
+%3 = 1 print
+%3 = 2 collect
+
+for i in robotlist:
+SWITCH case for R,A,P,C
+
+
+
+Case 1: "R"
+	if idle:
+		read prev_task
+		if next_task possible:
+			reduce_resources(task)
+		else:
+			break
+
+	if idle in next step:
+		read curr_task
+			if curr_task = assemble
+				next_task = 0
+			if curr_task = print
+				next_task = 1
+			if curr_task = collect
+				next_task = 2
+			
+		next_task_list = [collectCheck,assembleCheck,printCheck)]
+		if next_task_list[next_task]:
+			reduce_resources(next_task)
+			
+
+
+	elif NOT idle in next step:
+		call reduce_task_duration
+
+
+def reduce_resources(task):
+
+	if task = 0:
+		assembling()
+	if task = 1:
+		printing()
+	if task = 2:
+		collecting()
+	
