@@ -371,7 +371,7 @@ def main():
 				if(robotlist[i].tasks_dur - 1 != 0):
 					robotlist[i].set_task_dur(robotlist[i].tasks_dur - 1)
 				
-				#If task is ending in the next time step and Replicator
+				#If task is ending in the next time step and current robot is Replicator
 				elif(robotlist[i].tasks_dur - 1 == 0 and robotlist[i].type == "Replicator"):
 
 					# check if it can keep assembling next time step
@@ -458,7 +458,9 @@ def main():
 						robotlist[i].set_task_dur(0)
 						# set current task to idle if can not collect
 						robotlist[i].set_curr_task("idle")
-				
+
+
+
 		n_replicator = 0
 		n_normal = 0
 		n_assembler = 0
