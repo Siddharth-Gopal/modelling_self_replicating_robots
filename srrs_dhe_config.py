@@ -365,8 +365,9 @@ def main():
 
 				# If idle and printer
 				elif(robotlist[i].type == "Printer"):
+
 					if(printCheck(robotlist[i])):
-						isPrinting = printing(robotlist[i])
+						printing(robotlist[i])
 					elif(collectCheck()):
 						collecting(robotlist[i])
 					else:
@@ -376,6 +377,7 @@ def main():
 
 				# If idle and assembler
 				elif(robotlist[i].type == "Assembler"):
+
 					if(robotlist[i].get_previously_built()==""):
 						if(assembleCheck("Normal")):
 							isAssembling = assembling(robotlist[i],"Normal")

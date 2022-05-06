@@ -457,8 +457,6 @@ def main():
 									newbot.set_task_dur(0)
 									newbot.set_curr_task("idle")
 
-							
-
 							#Adding the newbot to the total robot list and robot list
 							totlist.append(newbot)
 							robotlist.append(newbot)
