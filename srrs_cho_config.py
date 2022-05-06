@@ -235,8 +235,6 @@ def assembling(robot,tobuild):
 		robot.set_task_dur(0)
 		return False
 
-		
-
 def assemble(builder,tobuild):
 	global rid,nid,aid,pid,Printable,NonPr,Quality_incr_Chance,Quality_incr_Lower, Quality_incr_Upper
 	
@@ -324,6 +322,7 @@ def main():
 				
 				# Replicator
 				if(robotlist[i].type == "Replicator"):
+
 					if(assembleCheck(robotlist[i],"Replicator")):
 						isAssembling = assembling(robotlist[i],"Replicator")
 					elif(printCheck(robotlist[i])):
@@ -335,9 +334,9 @@ def main():
 					
 				# Normal
 				elif(robotlist[i].type == "Normal"):
-					canCollect = collectCheck(robotlist[i])
+
 					# print(t,robotlist[i].id,canCollect)
-					if canCollect:
+					if (collectCheck(robotlist[i])):
 						collecting(robotlist[i])
 					else:
 						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
