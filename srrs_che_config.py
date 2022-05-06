@@ -359,7 +359,7 @@ def main():
 				elif(robotlist[i].type == "Printer"):
 					if(printCheck(robotlist[i])):
 						isPrinting = printing(robotlist[i])
-					elif(collectCheck(robotlist[i])):
+					elif(collectCheck()):
 						collecting(robotlist[i])
 					else:
 						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
@@ -370,7 +370,7 @@ def main():
 				elif(robotlist[i].type == "Assembler"):
 					if(assembleCheck("Normal")):
 						isAssembling = assembling(robotlist[i],"Normal")
-					elif(collectCheck(robotlist[i])):
+					elif(collectCheck()):
 						collecting(robotlist[i])
 					else:
 						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
@@ -432,7 +432,6 @@ def main():
 
 					# If can't do any task then set robot to idle
 					else:
-						print("LMAO1")
 						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
 						robotlist[i].set_task_dur(0)
 						robotlist[i].set_curr_task("idle")
@@ -454,7 +453,7 @@ def main():
 									# Starting the collecting process + reducing resources
 									collecting(newbot)
 								else:
-									newbot.set_prev_task(robotlist[i].get_curr_task())
+									newbot.set_prev_task(newbot.get_curr_task())
 									newbot.set_task_dur(0)
 									newbot.set_curr_task("idle")
 
