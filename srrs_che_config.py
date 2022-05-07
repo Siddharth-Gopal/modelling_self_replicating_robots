@@ -368,8 +368,9 @@ def main():
 
 				# If idle and assembler
 				elif(robotlist[i].type == "Assembler"):
+
 					if(assembleCheck("Normal")):
-						isAssembling = assembling(robotlist[i],"Normal")
+						assembling(robotlist[i],"Normal")
 					elif(collectCheck()):
 						collecting(robotlist[i])
 					else:

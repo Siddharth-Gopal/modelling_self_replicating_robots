@@ -19,7 +19,7 @@ import sys
 from matplotlib.patches import Rectangle
 
 
-timesteps = 120
+timesteps = 100
 fig, ax = plt.subplots(3,2)
 # plt.title("SRRS - DHO Config.")
 # plt.xlabel("Time")
@@ -185,7 +185,6 @@ def assembleCheck(robot,tobuild):
 	else:
 		return False
 
-
 def assembling(robot,tobuild):
 	global rid,nid,aid,pid,Printable,NonPr,Quality_incr_Chance,Quality_incr_Lower, Quality_incr_Upper
 	
@@ -234,8 +233,6 @@ def assembling(robot,tobuild):
 		robot.set_curr_task("idle")
 		robot.set_task_dur(0)
 		return False
-
-		
 
 def assemble(builder,tobuild):
 	global rid,nid,aid,pid,Printable,NonPr,Quality_incr_Chance,Quality_incr_Lower, Quality_incr_Upper
@@ -324,10 +321,11 @@ def main():
 				
 				# Replicator
 				if(robotlist[i].type == "Replicator"):
+
 					if(assembleCheck(robotlist[i],"Replicator")):
-						isAssembling = assembling(robotlist[i],"Replicator")
+						assembling(robotlist[i],"Replicator")
 					elif(printCheck(robotlist[i])):
-						isPrinting = printing(robotlist[i])	
+						printing(robotlist[i])
 					elif(collectCheck(robotlist[i])):
 						collecting(robotlist[i])	
 					else:
@@ -376,9 +374,9 @@ def main():
 									collecting(newbot)
 							if(newbot.type == "Replicator"):
 								if(assembleCheck(newbot,"Replicator")):
-									isAssembling = assembling(newbot,"Replicator")
+									assembling(newbot,"Replicator")
 								elif(printCheck(robotlist[i])):
-									isPrinting = printing(robotlist[i])	
+									printing(robotlist[i])
 								elif(collectCheck(robotlist[i])):
 									collecting(robotlist[i])	
 								else:

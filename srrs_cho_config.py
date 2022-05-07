@@ -19,7 +19,7 @@ import sys
 from matplotlib.patches import Rectangle
 
 
-timesteps = 120
+timesteps = 200
 fig, ax = plt.subplots(3,2)
 # plt.title("SRRS - DHO Config.")
 # plt.xlabel("Time")
@@ -323,8 +323,8 @@ def main():
 				# Replicator
 				if(robotlist[i].type == "Replicator"):
 
-					if(assembleCheck(robotlist[i],"Replicator")):
-						isAssembling = assembling(robotlist[i],"Replicator")
+					if(assembleCheck(robotlist[i],"Normal")):
+						isAssembling = assembling(robotlist[i],"Normal")
 					elif(printCheck(robotlist[i])):
 						isPrinting = printing(robotlist[i])	
 					else:
@@ -352,10 +352,10 @@ def main():
 				# Replicator 
 				elif(robotlist[i].tasks_dur - 1 == 0 and robotlist[i].type == "Replicator"):
 					# check if it can keep assembling next time step
-					if(assembleCheck(robotlist[i],"Replicator")):
-						isAssembling = assembling(robotlist[i],"Replicator")
+					if(assembleCheck(robotlist[i],"Normal")):
+						assembling(robotlist[i],"Normal")
 					elif(printCheck(robotlist[i])):
-						isPrinting = printing(robotlist[i])	
+						printing(robotlist[i])
 					else:
 						isAssembling = False
 						robotlist[i].set_prev_task(robotlist[i].get_curr_task())
@@ -364,7 +364,9 @@ def main():
 					
 					# it enters this loop only when it has to pop a new robot
 					if(robotlist[i].get_prev_task()=="assembling"):
+
 						newbot = assemble(robotlist[i],"Normal")
+
 						if newbot and newbot.build_qual>=0.5:
 							if(newbot.type == "Normal"):
 								canCollect = collectCheck(newbot)
