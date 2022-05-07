@@ -562,7 +562,7 @@ def main():
 		plt.legend()		
 		plt.show()
 
-	df.to_csv("srrs_cho.csv")
+	df.to_csv("./Output/CHO/srrs_cho.csv")
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ import sys
 from matplotlib.patches import Rectangle
 
 
-timesteps = 120
+timesteps = 2000
 fig, ax = plt.subplots(3,2)
 # plt.title("SRRS - DHO Config.")
 # plt.xlabel("Time")
@@ -657,7 +657,7 @@ def main():
 		plt.legend()
 		plt.show()
 
-	df.to_csv("srrs_che.csv")
+	df.to_csv("./Output/CHE/srrs_che.csv")
 
 
 if __name__ == "__main__":
