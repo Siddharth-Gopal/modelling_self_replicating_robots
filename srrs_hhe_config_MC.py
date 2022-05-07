@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import sys
 from matplotlib.patches import Rectangle
 
-timesteps = 90
+timesteps = 2000
 fig, ax = plt.subplots(3, 2)
 # plt.title("SRRS - DHO Config.")
 # plt.xlabel("Time")
@@ -353,11 +353,10 @@ def main():
         listnumPrinting = []
         listnumAssembling = []
 
-        # Lists used for visualization
-        tcoordslist = []
-        rcoordslist = []
-        wastecoordslist = []
-        t_build_quality_list = []
+        checkENV = 0
+        checkPrint = 0
+        checkNonPr = 0
+        checkMat = 0
 
         # For loop for each time step
         for t in range(0, timesteps):
@@ -686,11 +685,29 @@ def main():
                                avg_build_qual_inservice, avg_build_qual_inoutservice,
                                useless_r_flag, useless_c_flag, useless_a_flag, useless_p_flag]
 
+            if (Env_Materials == 0 and checkENV == 0):
+                checkENV = t
+            if (Printable == 0 and checkPrint == 0):
+                checkPrint = t
+            if (NonPr == 0 and checkNonPr == 0):
+                checkNonPr = t
+            if (Materials == 0 and checkMat == 0):
+                checkMat = t
+
         last_row = df.tail(1)
         mcdf = mcdf.append(last_row, ignore_index=True)
+        mcdf[["Environment Exhaust Time"]] = checkENV
+        mcdf[["Printable Exhaust Time"]] = checkPrint
+        mcdf[["NonPr Exhaust Time"]] = checkNonPr
+        mcdf[["Material Exhaust Time"]] = checkMat
+
+    mcdf["Print Capacity"] = mcdf[["#Printer", "#Replicator"]].sum(axis=1)
+    mcdf["Assembling Capacity"] = mcdf[["#Assembler", "#Replicator"]].sum(axis=1)
+    mcdf["Collection Capacity"] = mcdf[["#Printer", "#Replicator", "#Assembler", "#Normal"]].sum(axis=1)
 
 
-    mcdf.to_csv("./Output/HHE/srrs_HHE_mc.csv")
+
+    mcdf.to_csv("./Output/HHE/srrs_HHE_mc2.csv")
 
 
 if __name__ == "__main__":

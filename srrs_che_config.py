@@ -542,8 +542,8 @@ def main():
 
 		for i in totlist:
 			tot_build_qual_inoutservice = tot_build_qual_inoutservice + i.get_buid_qual()
-			plt.subplot(3,2,5)
-			plt.scatter(t,i.get_buid_qual(),marker='x',color='black',s=0.1)
+			# plt.subplot(3,2,5)
+			# plt.scatter(t,i.get_buid_qual(),marker='x',color='black',s=0.1)
 			build_quality_list.append(i.get_buid_qual())
 
 		avg_build_qual_inservice = round(tot_build_qual_inservice/len(robotlist),decimalPlaces)

@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import sys
 from matplotlib.patches import Rectangle
 
-timesteps = 100
+timesteps = 2000
 fig, ax = plt.subplots(3, 2)
 # plt.title("SRRS - DHO Config.")
 # plt.xlabel("Time")
@@ -305,6 +305,7 @@ def main():
                                  "Average Build Quality in-service", "Average Build Quality of System",
                                  "#WasteReplicator", "#WasteNormal", "#WasteAssembler", "#WastePrinter"])
     for mc in range(Num_Steps):
+
         global NonPr, Printable, Materials, Env_Materials
         NonPr = 300.0  # ; % The robot system=s starting quantity of nonprintable components.
         Printable = 100.0  # ; % The robot system’s starting quantity of printable components.
@@ -332,11 +333,10 @@ def main():
         listnumPrinting = []
         listnumAssembling = []
 
-        # use lists
-        tcoordslist = []
-        rcoordslist = []
-        wastecoordslist = []
-        t_build_quality_list = []
+        checkENV = 0
+        checkPrint = 0
+        checkNonPr = 0
+        checkMat = 0
 
         for t in range(0, timesteps):
 
@@ -523,11 +523,26 @@ def main():
                                avg_build_qual_inservice, avg_build_qual_inoutservice,
                                useless_r_flag, useless_c_flag, useless_a_flag, useless_p_flag]
 
+            if (Env_Materials == 0 and checkENV == 0):
+                checkENV = t
+            if (Printable == 0 and checkPrint == 0):
+                checkPrint = t
+            if (NonPr == 0 and checkNonPr == 0):
+                checkNonPr = t
+            if (Materials == 0 and checkMat == 0):
+                checkMat = t
 
         last_row = df.tail(1)
         mcdf = mcdf.append(last_row, ignore_index=True)
+        mcdf[["Environment Exhaust Time"]] = checkENV
+        mcdf[["Printable Exhaust Time"]] = checkPrint
+        mcdf[["NonPr Exhaust Time"]] = checkNonPr
+        mcdf[["Material Exhaust Time"]] = checkMat
 
-    mcdf.to_csv("./Output/DHO/srrs_dho_apc_mc.csv")
+    mcdf["Print Capacity"] = mcdf[["#Printer", "#Replicator"]].sum(axis=1)
+    mcdf["Assembling Capacity"] = mcdf[["#Assembler", "#Replicator"]].sum(axis=1)
+    mcdf["Collection Capacity"] = mcdf[["#Printer", "#Replicator", "#Assembler", "#Normal"]].sum(axis=1)
+    mcdf.to_csv("./Output/DHO/srrs_dho_apc_mc2.csv")
 
 
 if __name__ == "__main__":
