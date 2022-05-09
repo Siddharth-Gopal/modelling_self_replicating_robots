@@ -346,6 +346,10 @@ def main():
     wastecoordslist = []
     t_build_quality_list = []
 
+    checkENV = 0
+    checkPrint = 0
+    checkNonPr = 0
+    checkMat = 0
     # For loop for each time step
     for t in range(0, timesteps):
 
@@ -641,7 +645,7 @@ def main():
         listnumPrinting.append(p_flag)
         listnumAssembling.append(a_flag)
 
-        print("=" * 50)
+        # print("=" * 50)
         neatPrint = False
         if neatPrint:
             print("=" * 50)
@@ -663,9 +667,10 @@ def main():
             isWaste = False
             if j.build_qual < QualityThreshold:
                 isWaste = True
-            print(t, len(totlist), j.id, j.type[0], j.current_task, j.get_task_dur(), j.get_previously_built(),
-                  j.build_qual)
+            # print(t, len(totlist), j.id, j.type[0], j.current_task, j.get_task_dur(), j.get_previously_built(),
+            #       j.build_qual)
             # if(j.type=="Replicator"): print(j.beingbuiltlist)
+            print(checkENV, Env_Materials)
             ids.append(j.id)
 
         df.loc[len(df)] = [t, NonPr, Printable, Materials, Env_Materials,
@@ -676,6 +681,15 @@ def main():
                            useless_r_flag, useless_c_flag, useless_a_flag, useless_p_flag]
 
         # "#WasteReplicator","#WasteNormal","#WasteAssembler","#WastePrinter"])
+
+        if (Env_Materials == 0 and checkENV == 0):
+            checkENV = t
+        if (Printable == 0 and checkPrint == 0):
+            checkPrint = t
+        if (NonPr == 0 and checkNonPr == 0):
+            checkNonPr = t
+        if (Materials == 0 and checkMat == 0):
+            checkMat = t
 
         tcoordslist.append(t)
         rcoordslist.append(len(robotlist))
@@ -744,7 +758,7 @@ def main():
         plt.legend()
         plt.show()
 
-    df.to_csv("./Output/HHE/srrs_hhe.csv")
+    df.to_csv("./Output/HHE/srrs_hhe55.csv")
 
 
 if __name__ == "__main__":

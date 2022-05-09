@@ -1,8 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-filename = "srrs_HHE_mc2"
-config = "HHE"
+filename = "srrs_dhe_mc2"
+config = "DHE"
 df = pd.read_csv("./Output/"+config+"/"+filename+".csv")
 last_row = df.mean()
 
@@ -22,11 +22,11 @@ fig = plt.gcf()
 fig.savefig("./Output/"+config+"/hist_env_exhaust")
 fig.clear()
 
-plt.hist(df['Printable Exhaust Time'],bins=20)
-plt.xlabel('Printable Exhaust Time')
+plt.hist(df["Material Exhaust Time"],bins=20)
+plt.xlabel("Material Exhaust Time")
 plt.ylabel('Frequency')
 fig = plt.gcf()
-fig.savefig("./Output/"+config+"/hist_printable_exhaust")
+fig.savefig("./Output/"+config+"/hist_material_exhaust")
 fig.clear()
 
 plt.hist(df['NonPr Exhaust Time'],bins=20)
@@ -74,7 +74,7 @@ fig.clear()
 df = df.append(last_row, ignore_index=True)
 
 
-col = ['Environment Exhaust Time', 'Printable Exhaust Time','NonPr Exhaust Time','Print Capacity',
+col = ['Environment Exhaust Time', "Material Exhaust Time",'NonPr Exhaust Time','Print Capacity',
        'Assembling Capacity', 'Collection Capacity','Average Build Quality in-service', 'Average Build Quality of System','#Out']
 
 mean = df.tail(1)

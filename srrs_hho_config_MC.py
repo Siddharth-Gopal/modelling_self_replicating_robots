@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import sys
 from matplotlib.patches import Rectangle
 
-timesteps = 2000
+timesteps = 100
 fig, ax = plt.subplots(3, 2)
 # plt.title("SRRS - DHO Config.")
 # plt.xlabel("Time")
@@ -36,7 +36,7 @@ pid = 0
 decimalPlaces = 3
 
 # simulation parameters
-Num_Steps = 100  # ; % Number of iterations/time-steps that the simulation goes through.
+Num_Steps = 1000  # ; % Number of iterations/time-steps that the simulation goes through.
 NonPr = 300.0  # ; % The robot system=s starting quantity of nonprintable components.
 Printable = 100.0  # ; % The robot system’s starting quantity of printable components.
 Materials = 50.0  # ; % The robot system’s starting quantity of raw printing materials.
@@ -314,9 +314,13 @@ def main():
                                  "#Assembling", "#Printing", "#Collecting", "#Idle",
                                  "#In", "#Out",
                                  "Average Build Quality in-service", "Average Build Quality of System",
-                                 "#WasteReplicator", "#WasteNormal", "#WasteAssembler", "#WastePrinter"])
+                                 "#WasteReplicator", "#WasteNormal", "#WasteAssembler", "#WastePrinter",
+                                 "Environment Exhaust Time", "Printable Exhaust Time", "NonPr Exhaust Time",
+                                 "Material Exhaust Time"])
+
     for mc in range(Num_Steps):
         global NonPr, Printable, Materials, Env_Materials
+        print(mc)
         NonPr = 300.0  # ; % The robot system=s starting quantity of nonprintable components.
         Printable = 100.0  # ; % The robot system’s starting quantity of printable components.
         Materials = 50.0  # ; % The robot system’s starting quantity of raw printing materials.
@@ -330,7 +334,9 @@ def main():
                                    "#Assembling", "#Printing", "#Collecting", "#Idle",
                                    "#In", "#Out",
                                    "Average Build Quality in-service", "Average Build Quality of System",
-                                   "#WasteReplicator", "#WasteNormal", "#WasteAssembler", "#WastePrinter"])
+                                   "#WasteReplicator", "#WasteNormal", "#WasteAssembler", "#WastePrinter",
+                                   "Environment Exhaust Time", "Printable Exhaust Time", "NonPr Exhaust Time",
+                                   "Material Exhaust Time"])
 
         robot = Robot("Replicator", init_build_qual, rid)
 
@@ -564,30 +570,28 @@ def main():
                 # if(j.type=="Replicator"): print(j.beingbuiltlist)
                 ids.append(j.id)
 
-            df.loc[len(df)] = [t, NonPr, Printable, Materials, Env_Materials,
-                               n_replicator, n_normal, n_assembler, n_printer,
-                               a_flag, p_flag, c_flag, i_flag,
-                               len(robotlist), len(useless),
-                               avg_build_qual_inservice, avg_build_qual_inoutservice,
-                               useless_r_flag, useless_c_flag, useless_a_flag, useless_p_flag]
-
-            # "#WasteReplicator","#WasteNormal","#WasteAssembler","#WastePrinter"])
-
             if (Env_Materials == 0 and checkENV == 0):
                 checkENV = t
             if (Printable == 0 and checkPrint == 0):
                 checkPrint = t
             if (NonPr == 0 and checkNonPr == 0):
                 checkNonPr = t
-            if (Materials == 0 and checkMat == 0):
+            if (Materials <= 1 and checkMat == 0):
                 checkMat = t
+
+            df.loc[len(df)] = [t, NonPr, Printable, Materials, Env_Materials,
+                               n_replicator, n_normal, n_assembler, n_printer,
+                               a_flag, p_flag, c_flag, i_flag,
+                               len(robotlist), len(useless),
+                               avg_build_qual_inservice, avg_build_qual_inoutservice,
+                               useless_r_flag, useless_c_flag, useless_a_flag, useless_p_flag, 0, 0, 0, 0]
 
         last_row = df.tail(1)
         mcdf = mcdf.append(last_row, ignore_index=True)
-        mcdf[["Environment Exhaust Time"]] = checkENV
-        mcdf[["Printable Exhaust Time"]] = checkPrint
-        mcdf[["NonPr Exhaust Time"]] = checkNonPr
-        mcdf[["Material Exhaust Time"]] = checkMat
+        mcdf.iloc[-1]["Environment Exhaust Time"] = checkENV
+        mcdf.iloc[-1]["Printable Exhaust Time"] = checkPrint
+        mcdf.iloc[-1]["NonPr Exhaust Time"] = checkNonPr
+        mcdf.iloc[-1]["Material Exhaust Time"] = checkMat
 
     mcdf["Print Capacity"] = mcdf[["#Printer", "#Replicator"]].sum(axis=1)
     mcdf["Assembling Capacity"] = mcdf[["#Assembler", "#Replicator"]].sum(axis=1)
